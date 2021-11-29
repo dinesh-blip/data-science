@@ -50,9 +50,9 @@ print("Removed NAs")
 # Filter out users with too few samples
 minRecordsPerDriver=50
 
-subs = df.groupBy('DriverId').count().filter('count>{}'.format(minRecordsPerDriver))
+subs = df.groupBy('DeviceId').count().filter('count>{}'.format(minRecordsPerDriver))
 print('Number of drivers = {}'.format(subs.count()))
-df = df.join(subs,['DriverId'])
+df = df.join(subs,['DeviceId'])
 
 cnt = df.count()
 print("{} events remained after cleansing".format(cnt))
@@ -90,9 +90,9 @@ def total_distance(oneDriver):
     return pd.DataFrame({"DriverId":oneDriver['DriverId'].iloc[0],"Distance":np.sum(dist)},index = [0])
 
 ## Calculate the overall distance made by each subscriber
-distancePerDriver = dfRaw.groupBy('DriverId').apply(total_distance)
+distancePerDriver = dfRaw.groupBy('DeviceId').apply(total_distance)
 #distancePerDriver = distancePerDriver[distancePerDriver.Distance > 0]
-distancePerDriver.sort('DriverId').show()
+distancePerDriver.sort('DeviceId').show()
 
 # COMMAND ----------
 
@@ -103,16 +103,16 @@ colNames.append('DriverId')
 print("Starting feature engineering with {} samples".format(df.count()))
 
 ## Pivot the data from events to features: 1. Count number of events per type per driver, 2. Pivot into a data frames of drivers X features
-subs = df.groupby('DriverId').count()
+subs = df.groupby('DeviceId').count()
 
-eventsPerDriver = df.groupby(["DriverId","EventName"]).count()
+eventsPerDriver = df.groupby(["DeviceId","EventName"]).count()
 
-eventsPerDriver = eventsPerDriver.groupby("DriverId").pivot('EventName').sum('count')
+eventsPerDriver = eventsPerDriver.groupby("DeviceId").pivot('EventName').sum('count')
 eventsPerDriver = eventsPerDriver.na.fill(0)
 
 
 ## Add total drive duration per driver
-eventsPerDriver = distancePerDriver.join(eventsPerDriver,'DriverId')
+eventsPerDriver = distancePerDriver.join(eventsPerDriver,'DeviceId')
 print("{} drivers after join with distances".format(eventsPerDriver.count()))
 ## Divide the number of events per subscriber with the total driver duration per subscriber
 for fea in featureNames:
